@@ -1,43 +1,26 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
-orbs:
-  aws-cli: circleci/aws-cli@1.4.0
+
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  deploy-cfn:
-    parameters:
-      stack-name1:
-        description: My-Instance-Scheduler
-        type: string
-      stack-name2:
-        description: My-Custom-Instance-Schedule
-        type: string
-      aws-cross-account-roles:
-        description: Cross Account IAM roles that can be assume from the Org Account
-        type: string
-    executor: aws-cli/default
+  say-hello:
+    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
+    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+    docker:
+      - image: cimg/base:stable
+    # Add steps to the job
+    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
-      - aws-cli/setup
       - run:
-          name: Deploy Cloudformation Template of Instance Scheduler
-          command: |
-            aws cloudformation deploy \
-            --template aws-instance-scheduler.template \
-            --stack << parameters.stack-name1 >> \
-            --parameter-overrides Regions="us-east-1" StartedTags="startednow" CrossAccountRoles=<< parameters.aws-cross-account-roles >> StoppedTags="stopped" \
-            --capabilities CAPABILITY_NAMED_IAM   
-      - run:
-          name: Enable Custom Schedule
-          command: |
-            aws cloudformation deploy \
-            --template custom-schedule.template \
-            --stack << parameters.stack-name2 >> \
-            --parameter-overrides StackName=<< parameters.stack-name1 >> \
-            --capabilities CAPABILITY_NAMED_IAM       
-      
+          name: "Say hello"
+          command: "echo Hello, World!"
+
+# Invoke jobs via workflows
+# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  deploy:
+  say-hello-workflow:
     jobs:
-    - deploy-cfn:
-        stack-name1: My-Instnace-Scheduler
-        stack-name2: My-Custom-Instance-Schedule
-        aws-cross-account-roles: "arn:aws:iam::000000000000:role/cross-account-role,arn:aws:iam::000000000000:role/service-role/cross-account-role2"
+      - say-hello
